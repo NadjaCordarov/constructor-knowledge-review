@@ -1,0 +1,394 @@
+/* ==========================================================================
+ * Constructor Knowledge — ck-styles.css
+ *
+ * The single CSS surface for this project (CLAUDE.md rule 5). No second
+ * stylesheet, no per-page CSS file, no inline <style> in Elementor HTML
+ * widgets, and nothing in Elementor's own Custom CSS panel — that panel does
+ * not exist in free Elementor anyway (verified: includes/managers/controls.php
+ * :1071-1100 registers the section as the Pro teaser `section_custom_css_pro`
+ * with a single RAW_HTML control `custom_css_pro`), and rule 5 forbids it
+ * regardless because its contents would live in the database, outside git.
+ *
+ * Loaded by ck-core.php SS3 on wp_enqueue_scripts, front end only, versioned
+ * on filemtime.
+ *
+ * -----------------------------------------------------------------------------
+ * INDEX
+ * -----------------------------------------------------------------------------
+ *
+ *   SS1 · text-wrap: pretty on headings, prose and quotes
+ *   SS2 · #contact { scroll-margin-top } — footer anchor clears the sticky nav
+ *   SS3 · prefers-reduced-motion: reduce — motion opt-out
+ *   SS4 · Partner marquee — drag-scrollable continuous strip
+ *   SS6 · #masthead { position: sticky } — the site's only navigation
+ *   SS7 · HFE nav pointer underline geometry — 2px, inset to the text
+ *
+ * Section numbers are per-file. Cite them with the filename ("ck-styles.css
+ * SS2"), because ck-core.php has its own SS1-SS8 namespace. Numbers are never
+ * reused or renumbered; deleting a section deletes its row in
+ * PLAN.md -> Custom code inventory in the same commit.
+ *
+ * SS1-SS5 were requested and justified by `elementor-kit` in ISSUE-022, which
+ * came out of its ten ISSUE-004 verdicts. SS6-SS7 by the same agent in
+ * ISSUE-027, after Phase 4 built and measured the header. SS8 by `qa-reviewer`
+ * in ISSUE-048, and the SS5 addendum by the same agent in ISSUE-037 — both
+ * measured on the rendered page rather than reasoned about, which is why they
+ * carry measured numbers rather than only control paths. SS5's ink stroke by
+ * `design-interpreter` in ISSUE-053, against `design/tokens.md` section 8.1
+ * (D-73), which is the normative specification for the focus indicator and the
+ * thing to read before changing anything in that section. The TRIED lines
+ * below are its wording — it is the agent that actually operated the controls.
+ * Where I could check a claim against the plugin source I did, and marked the
+ * result; two of ISSUE-022's counts were wrong and are corrected in place, and
+ * two of ISSUE-027's selector facts are corrected in SS6/SS7.
+ *
+ * `L###` = line in design-source/project/Constructor Knowledge.dc.html.
+ * ========================================================================== */
+
+
+/* ==========================================================================
+ * SS1 · TEXT-WRAP: PRETTY — headings, prose and quotes
+ * TRIED : Site Settings -> Theme Style -> Typography -> Body / Link /
+ *         Headings H1-H6 -> Typography ; and Heading widget -> Style ->
+ *         Title -> Typography
+ * WHY   : Elementor's Group_Control_Typography registers exactly nine fields
+ *         (font-family, font-size, font-weight, text-transform, font-style,
+ *         text-decoration, line-height, letter-spacing, word-spacing). No
+ *         text-wrap / text-balance field exists at any level, and the
+ *         per-element Custom CSS panel is Pro-gated.
+ * SCOPE : site-wide
+ * DATE  : 2026-08-21 - wp-platform
+ *
+ * VERIFIED: the nine-field claim holds on Elementor 4.2.3. Every $fields[...]
+ * key in includes/controls/groups/typography.php: font_family, font_size,
+ * font_style, font_weight, letter_spacing, line_height, text_decoration,
+ * text_transform, word_spacing. Nothing wrapping-related at any level.
+ *
+ * CORRECTION to ISSUE-022, which said "24 elements ... on every h1": the
+ * design carries `text-wrap:pretty` on 35 elements — 24 <p>, 6 <span>, 4 <h2>,
+ * 1 <blockquote> — and on **no h1 at all**. 24 was the <p> count.
+ *
+ * The design sets it inline per element, which no Elementor control can
+ * reproduce element by element, so this applies it by tag inside the Elementor
+ * wrapper. That is a deliberate superset: it adds h1 and h3-h6, which the
+ * design omits. `text-wrap: pretty` only changes how a line breaks when the
+ * text already wraps, so the superset cannot alter a layout the design fixes —
+ * it can only improve the same last-line orphan the design was avoiding. The
+ * 6 <span> cases (card titles, FAQ questions) build as headings or paragraphs
+ * and are covered by the same selector. Unsupported browsers ignore it.
+ * ========================================================================== */
+
+.elementor h1,
+.elementor h2,
+.elementor h3,
+.elementor h4,
+.elementor h5,
+.elementor h6,
+.elementor p,
+.elementor blockquote {
+	text-wrap: pretty;
+}
+
+
+/* ==========================================================================
+ * SS2 · #contact — scroll-margin-top so the footer anchor clears the nav
+ * TRIED : Container -> Advanced -> Layout (Margin, Padding, Width, Position,
+ *         Z-Index) ; Container -> Advanced -> Motion Effects
+ * WHY   : no scroll-margin control exists on any Elementor element. Without
+ *         it the footer CTA lands underneath the header on every anchor jump,
+ *         on every page.
+ * SCOPE : site-wide
+ * DATE  : 2026-08-21 - wp-platform
+ *
+ * Verbatim from the design, L24: `#contact { scroll-margin-top: 76px; }`.
+ * 76px = the 71px sticky header (design L93-94) plus 5px of air. The value is
+ * the design's, not a derivation — if the header height changes, this changes
+ * with it and PLAN.md's Measured facts row is the place that records why.
+ *
+ * `#contact` is the id on the closing band that is this site's footer, so
+ * every in-page "Contact" link in the header and footer nav depends on it.
+ * ========================================================================== */
+
+#contact {
+	scroll-margin-top: 76px;
+}
+
+
+/* ==========================================================================
+ * SS3 · PREFERS-REDUCED-MOTION: REDUCE — motion opt-out
+ * TRIED : widget -> Advanced -> Motion Effects -> Entrance Animation /
+ *         Animation Duration / Animation Delay ; Site Settings -> Layout
+ * WHY   : Elementor free has no reduced-motion switch and does not gate
+ *         entrance animations on the media query. The entrance animations
+ *         themselves ARE native and are being used; only the opt-out is not.
+ *         tokens.md section 9 marks this "must be reproduced"; QA Section D.
+ * SCOPE : site-wide
+ * DATE  : 2026-08-21 - wp-platform
+ *
+ * The design, L51-54:
+ *
+ *   @media (prefers-reduced-motion: reduce) {
+ *     .ck-hero-in { opacity: 1; animation: none; }
+ *     * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+ *   }
+ *
+ * The second declaration transfers verbatim. The first does not: `.ck-hero-in`
+ * is the prototype's own hero-entrance class and does not exist in this build,
+ * because the hero entrance is built with Elementor's native entrance
+ * animations instead. Elementor's equivalent initial hidden state is
+ * `.elementor-invisible { visibility: hidden }`, set on the widget and cleared
+ * by JS when the element scrolls into view. Revealing it under the media query
+ * is the same instruction as `.ck-hero-in { opacity: 1 }` expressed against
+ * this build's markup: content is visible immediately, nothing moves, and
+ * nothing depends on the animation JS having run.
+ *
+ * The marquee (SS4) carries its own reduced-motion override, in its own
+ * section, for the reason documented there.
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+	}
+
+	/* Elementor's entrance-animation hidden state — the analogue of the
+	 * design's `.ck-hero-in { opacity: 1; animation: none }`. */
+	.elementor-invisible {
+		visibility: visible !important;
+	}
+}
+
+
+/* ==========================================================================
+ * SS4 · PARTNER MARQUEE — drag-scrollable continuous strip
+ * TRIED : Container -> Layout -> Content Width = Full Width (works natively;
+ *         the bleed is not part of this request) ; Container -> Layout ->
+ *         Overflow = Auto (works, and IS now used — the wrapper is a real
+ *         scroll container) ; Image Carousel widget -> Additional Options
+ *         (Swiper drags natively, but the widget has no per-slide background
+ *         or box-shadow control, so the design's white 246x158 logo card with
+ *         `0 2px 15px rgba(0,0,0,.1)` cannot be reproduced in it — see the
+ *         2026-08-26 note below).
+ * WHY   : Elementor free has no continuous marquee, no mask-image control, no
+ *         pause-on-hover and no pointer-drag. What is left here is only what
+ *         no control reaches: the scrollbar suppression, the grab cursor, the
+ *         edge fade, `width: max-content` on the track, and the speed constant
+ *         the JS reads.
+ * SCOPE : the marquee wrapper on the home page
+ * DATE  : 2026-08-21 - wp-platform; rewritten 2026-08-26 (user request: the
+ *         strip must be draggable left/right with a mouse)
+ *
+ * 2026-08-26 — WHAT CHANGED AND WHY
+ * ---------------------------------
+ * The strip was a CSS `@keyframes` translate on the track. A transform-driven
+ * marquee cannot be dragged: there is nothing to scroll, and D-57 (the
+ * prototype's own `initMarqueeDrag`, L903-955) was dropped for exactly that
+ * reason. The user asked for mouse drag, so the mechanism is now a real
+ * horizontal scroll container and the autoplay is `scrollLeft` stepped from
+ * rAF in ck-scripts.js JS2. Same look, same 130s cycle, same seamless loop off
+ * the same doubled tile list — but now draggable with a mouse, swipeable on
+ * touch (native overflow scrolling, no JS involved), and reachable by the
+ * trackpad. D-57 is thereby reinstated rather than worked around.
+ *
+ * The alternative the user offered — swap in a widget that has slider options
+ * — was tried and rejected on evidence: Image Carousel's Style tab exposes
+ * only image spacing, border and radius. The white tile, its shadow and its
+ * 246px box are per-slide background and box-shadow, which the widget has no
+ * control for, so the swap would have traded the design's logo card for bare
+ * transparent PNGs on the #F9F9F9 band. Recorded so it is not re-proposed.
+ *
+ * CONTRACT WITH elementor-builder — this section styles two CSS classes and
+ * nothing else, so the markup has to supply them via the native control
+ * (Container -> Advanced -> CSS Classes):
+ *
+ *   .ck-marquee        the wrapper. Needs, natively on the container:
+ *                      Layout -> Overflow = **Auto** (was Hidden), and the
+ *                      padding the design gives it (14px 0 26px, L225).
+ *                      Full-bleed comes from Content Width = Full Width — do
+ *                      not reproduce the design's `margin: 20px -28px 0` hack.
+ *   .ck-marquee-track  the flex row of logo cards, direction row, no wrap.
+ *                      The card list must stay DOUBLED in the markup: JS2
+ *                      wraps `scrollLeft` at exactly half the track width, so
+ *                      one full copy scrolls past while the second takes its
+ *                      place. That doubling is what makes the loop seamless,
+ *                      in both directions, and halving it breaks both.
+ *
+ * `--ck-marquee-speed` is the only design number here and it is deliberately a
+ * custom property rather than a JS literal: ck-scripts.js is forbidden from
+ * carrying design values, so it reads this. 55px/s is the design's own rate —
+ * L21-22 translate one copy (27 tiles x 264px = 7128px) in 130s.
+ *
+ * DOCUMENTED DIVERGENCE — reduced motion. The design's L51-54 block applies
+ * `animation-duration: .01ms !important` to `*`, which would have spun the old
+ * 130s loop at 0.01ms — a strobing blur, for exactly the users who asked for
+ * less motion. The autoplay is now JS, so JS2 checks the media query and
+ * simply does not start. Dragging still works, which is strictly better than
+ * the old behaviour: reduced motion removes the automatic movement without
+ * removing access to the rest of the strip.
+ * ========================================================================== */
+
+.ck-marquee {
+	/* Elementor's Overflow = Auto gives `overflow: auto`; these four are what
+	 * no control reaches. The scrollbar is suppressed because the design has
+	 * no scrollbar in this band — the affordance is the grab cursor and the
+	 * movement itself. */
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+	cursor: grab;
+	overscroll-behavior-x: contain;
+
+	/* The rate JS2 reads. See the note above. */
+	--ck-marquee-speed: 55;
+
+	/* Edge fade, design L225. No Elementor control maps to mask-image. */
+	-webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+	mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+.ck-marquee::-webkit-scrollbar {
+	display: none;
+}
+
+/* JS2 sets this for the duration of a mouse drag. */
+.ck-marquee.is-ck-dragging {
+	cursor: grabbing;
+}
+
+.ck-marquee-track {
+	/* width:max-content keeps the doubled row on one line so half the track
+	 * width lands exactly on the copy boundary. Elementor's Width control
+	 * cannot express max-content, and the loop is meaningless without it. */
+	width: max-content;
+}
+
+
+
+/* ==========================================================================
+ * SS6 · #masthead — position: sticky, the site's only navigation
+ * TRIED : Container -> Advanced -> Layout -> Position  (a SELECT registering
+ *         exactly '' / 'absolute' / 'fixed' at
+ *         includes/elements/container.php:1532-1548 — no 'sticky' option and
+ *         no free-text field) ; Container -> Advanced -> Motion Effects ->
+ *         Sticky  (Pro only, the section is not registered in free) ; the HFE
+ *         header template's own settings  (HFE free has no sticky option — it
+ *         has an upsell instead, inc/class-hfe-promotion.php:243
+ *         add_sticky_header_promotion() injecting the RAW_HTML control
+ *         `hfe_sticky_header_promo` pointing at ultimateelementor.com/pricing)
+ * WHY   : the element that has to be sticky is not an Elementor element. A
+ *         sticky box is positioned within its nearest scrolling ancestor's
+ *         containing block, which for the boxed container is HFE's
+ *         <header id="masthead"> — a wrapper printed by
+ *         inc/hfe-functions.php:89, outside _elementor_data. Making the
+ *         container sticky would confine it to the header's own 71px height,
+ *         i.e. produce no stickiness at all. `position: fixed` from the one
+ *         native option that does stick was rejected because it takes the
+ *         header out of flow, so the page then needs a compensating
+ *         padding-top tracking the header height at four breakpoints — more
+ *         moving parts, and more brittle, than three declarations.
+ * SCOPE : site-wide
+ * DATE  : 2026-08-22 - wp-platform
+ *
+ * Verbatim from the design, L93:
+ *   <nav style="position:sticky;top:0;z-index:60;...">
+ * The design has NO scroll-state change — no shrink, no shadow, no background
+ * swap (components/nav-header.md States table). Sticky alone is the whole
+ * requirement, which is why there is no ck-scripts.js section beside it.
+ *
+ * CORRECTION to ISSUE-027, and the reason the selector is not the bare
+ * `#masthead` the issue proposed. The issue attributes the current
+ * `position: relative; z-index: 99` to Hello's theme.css. It is not Hello's:
+ * `masthead` appears in exactly one stylesheet across both the theme and HFE,
+ *
+ *   wp-content/plugins/header-footer-elementor/assets/css/header-footer-elementor.css:29-33
+ *   (comment there reads "Fix: Header hidden below the page content")
+ *   .ehf-header #masthead { z-index: 99; position: relative; }
+ *
+ * and that selector is (1,1,0). A bare `#masthead` is (1,0,0) and would LOSE
+ * outright, at any load order. `body.ehf-header #masthead` is (1,1,1), so it
+ * beats the plugin on specificity rather than on the accident of source
+ * order. `ehf-header` is a real body class, verified in the rendered
+ * document: `<body class="... ehf-header ehf-footer ...">`.
+ *
+ * The z-index is the design's 60, not the 99 HFE sets, per the issue's note:
+ * nothing else on the site claims a stacking context above 60, and HFE's own
+ * JS raises the mobile drawer to 9999 when it opens.
+ *
+ * Pairs with SS2. `#contact { scroll-margin-top: 76px }` was sized against
+ * this 71px sticky header and does nothing until this section exists.
+ * ========================================================================== */
+
+body.ehf-header #masthead {
+	position: sticky;
+	top: 0;
+	z-index: 60;
+}
+
+
+/* ==========================================================================
+ * SS7 · NAV POINTER UNDERLINE — 2px, inset to the text, 2px radius
+ * TRIED : HFE Nav Menu -> Style -> Main Menu -> Pointer = Underline, with
+ *         Animation = Fade and pointer_color_menu_item_hover /
+ *         pointer_color_menu_item_active  (these deliver the underline, its
+ *         colour and both trigger states natively — only the geometry is
+ *         wrong) ; the widget's complete control list, ~60 add_control /
+ *         add_responsive_control ids in navigation-menu.php, none of which
+ *         sets the pointer's height, inset or radius ; reaching the inset by
+ *         zeroing padding_horizontal_menu_item so HFE's `width: 100%` equals
+ *         the text width  (rejected: it shrinks each link's hit area from
+ *         (text + 30px) x 31px to text x 31px, and the design's larger target
+ *         is a real accessibility property)
+ * WHY   : the pointer's geometry is authored in the plugin's static
+ *         stylesheet, not in a control, so there is no value to set —
+ *         inc/widgets-css/frontend.css:689-695 hard-codes
+ *         { height: 3px; width: 100%; left: 0 } and :739-742 { bottom: 0 }.
+ * SCOPE : site-wide (the header is on every page)
+ * DATE  : 2026-08-22 - wp-platform
+ *
+ * The design, L29 (hover, ::after) and L103 (current page, a real <span>),
+ * identical geometry both times:
+ *   left: 15px; right: 15px; bottom: 2px; height: 2px; border-radius: 2px
+ * The inset is exactly the link's own horizontal padding (9px 15px, L100), so
+ * the rule spans the TEXT, not the padded box. `width: auto` is what converts
+ * HFE's `width: 100%; left: 0` into a left/right inset; it is not a separate
+ * design value.
+ *
+ * CORRECTION to ISSUE-027's specificity arithmetic, which it asked to have
+ * checked. The issue proposed dropping `.parent` and prefixing with
+ * `.elementor-widget-navigation-menu`, calling the result (0,5,2). Dropping
+ * `.parent` also drops a class, so the result is (0,4,2) — a TIE with HFE's
+ * `.hfe-pointer__underline .menu-item.parent a.hfe-menu-item:after`, winnable
+ * only on load order. `.parent` is kept here instead: it is present in the
+ * server-rendered markup (verified: `<li class="menu-item ... parent
+ * hfe-creative-menu">` in the raw HTML, so the issue's premise that only
+ * frontend.js `_borderClass()` adds it is incomplete), which makes the
+ * prefixed selector (0,5,2) for real and the override order-independent.
+ * Matching HFE's own qualifier is also strictly correct: where `.parent` is
+ * absent HFE paints nothing, so there is nothing to override.
+ *
+ * Scoped to `:after` only. For the `underline` pointer HFE gives `content`
+ * to `:after` alone (frontend.css:739-742) — `:before` is used by
+ * `double-line` and `overline`, which this site does not use, so styling it
+ * would be styling an element that never renders.
+ *
+ * Only the desktop nav is affected. The mobile nav (widget ckhdr130, layout
+ * `expandible`) has no pointer set, so it never matches.
+ * ========================================================================== */
+
+.elementor-widget-navigation-menu .hfe-pointer__underline .menu-item.parent a.hfe-menu-item:after {
+	left: 15px;
+	right: 15px;
+	width: auto;
+	height: 2px;
+	bottom: 2px;
+	border-radius: 2px;
+}
+
+
+/* SS5 (:focus-visible ring) and SS8 (no-script/print reveal) were REMOVED
+ * 2026-08-24 at the user's instruction: accessibility work is deferred, so the
+ * only CSS that stays is what the DESIGN needs. Both are recoverable from git
+ * history (commit 12be93c and earlier) if AA is picked up again. */
